@@ -22,6 +22,7 @@ bool isValidChar(char c) {
         (c == ' '));
 }
 
+
 /// <summary>
 /// Функция для корректного ввода строки с клавиатуры
 /// </summary>
@@ -142,7 +143,7 @@ void readFightersFromFile(const string& filename, BestMMAFighters fighters[], in
 void inputFighters(BestMMAFighters fighters[], int numFighters) { 
     // Ввод информации о всех бойцах
     for (int i = 0; i < numFighters; ++i) {
-        cout << "\nВвод данных о " << i + 1 << " бойце:" << endl;
+        cout << "Ввод данных о " << i + 1 << " бойце:" << endl;
         fighters[i].firstName = getStringInput("\nИмя: ");
 
         fighters[i].lastName = getStringInput("\nФамилия: ");
@@ -157,6 +158,7 @@ void inputFighters(BestMMAFighters fighters[], int numFighters) {
         fighters[i].losses = getIntNumber(0, 100); 
 
         fighters[i].weightClass = getStringInput("\nВесовая категория: ");
+        system("cls");
     }
 }
 
@@ -217,7 +219,7 @@ void createWinsIndex(const BestMMAFighters fighters[], int numFighters, IndexEnt
 /// <param name="index"></param>
 /// <param name="numFighters"></param>
 void printFightersByLastNamesAscending(const BestMMAFighters fighters[], const IndexEntry index[], int numFighters) {
-    cout << "\nСортировка бойцов по возрастанию фамилии в алфавитном порядке:" << endl;
+    cout << "Сортировка бойцов по возрастанию фамилии в алфавитном порядке:" << endl;
     for (int i = 0; i < numFighters; ++i) {
         const BestMMAFighters& fighter = fighters[index[i].originalIndex];
         cout << "\nИмя и фамилия: " << fighter.firstName << " " << fighter.lastName
@@ -237,7 +239,7 @@ void printFightersByLastNamesAscending(const BestMMAFighters fighters[], const I
 /// <param name="index"></param>
 /// <param name="numFighters"></param>
 void printFightersByWinsNumberDescending(const BestMMAFighters fighters[], const IndexEntry index[], int numFighters) {
-    cout << "\nСортировка бойцов по убыванию количества побед:" << endl;
+    cout << "Сортировка бойцов по убыванию количества побед:" << endl;
     for (int i = 0; i < numFighters; ++i) {
         const BestMMAFighters& fighter = fighters[index[i].originalIndex];
         cout << "\nИмя и фамилия: " << fighter.firstName << " " << fighter.lastName
@@ -322,7 +324,7 @@ int binarySearchWinsIter(const IndexEntry index[], int numFighters, int searchWi
     
     int low = 0;
     int high = numFighters - 1;
-
+    
     // Поиск индекса, по которому расположено заданное количество побед
     while (low <= high) {
         int mid = low + (high - low) / 2;
@@ -333,6 +335,7 @@ int binarySearchWinsIter(const IndexEntry index[], int numFighters, int searchWi
         else
             low = mid + 1;
     }
+        
     return -1;
 }
 
@@ -345,7 +348,7 @@ int binarySearchWinsIter(const IndexEntry index[], int numFighters, int searchWi
 /// <param name="winsIndex"></param>
 /// <param name="numFighters"></param>
 void editFighter(BestMMAFighters fighters[], IndexEntry lastNameIndex[], IndexEntry winsIndex[], int numFighters) {
-    cout << "\nВвод номера бойца для изменения фамилии и количества побед: ";
+    cout << "Ввод номера бойца для изменения фамилии и количества побед: ";
     int numOfFighter = getIntNumber(1, numFighters);
 
     BestMMAFighters& fighter = fighters[numOfFighter - 1];
@@ -378,35 +381,51 @@ void editFighter(BestMMAFighters fighters[], IndexEntry lastNameIndex[], IndexEn
 void deleteFighterByLastNameOrByWins(BestMMAFighters fighters[], IndexEntry lastNameIndex[], IndexEntry winsIndex[], int& numFighters, int choice) {
     string lastNameToDelete;
     int indexToDelete = 0;
+    int check = numFighters;
     if (choice == 1) {
-        lastNameToDelete = getStringInput("\nВведите фамилию бойца, информацию о котором хотите удалить: ");
-        indexToDelete = binarySearchLastNameRecur(lastNameIndex, 0, numFighters - 1, lastNameToDelete);
+        lastNameToDelete = getStringInput("Введите фамилию бойца, информацию о котором хотите удалить: ");
+        do {       
+            indexToDelete = binarySearchLastNameRecur(lastNameIndex, 0, numFighters - 1, lastNameToDelete);
+            // Сдвиг всех элементов после удаленного на одну позицию назад
+            if (indexToDelete != -1) {
+                for (int i = indexToDelete; i < numFighters - 1; ++i) {
+                    fighters[i] = fighters[i + 1];
+                }
+                numFighters--;
+                createLastNameIndex(fighters, numFighters, lastNameIndex);
+                createWinsIndex(fighters, numFighters, winsIndex);
+            }
+            
+        } while (indexToDelete != -1);
     }
     else {
-        cout << "\nВведите количество побед бойца, информацию о котором хотите удалить: ";
+        cout << "Введите количество побед бойца, информацию о котором хотите удалить: ";
         int searchWins = getIntNumber(0, 100);
         indexToDelete = binarySearchWinsIter(winsIndex, numFighters, searchWins);
+        do {
+            indexToDelete = binarySearchWinsIter(winsIndex, numFighters, searchWins);
+            // Сдвиг всех элементов после удаленного на одну позицию назад
+            if (indexToDelete != -1) {
+                for (int i = indexToDelete; i < numFighters - 1; ++i) {
+                    fighters[i] = fighters[i + 1];
+                }
+                numFighters--;
+                createLastNameIndex(fighters, numFighters, lastNameIndex);
+                createWinsIndex(fighters, numFighters, winsIndex);
+            }
+
+        } while (indexToDelete != -1);
     }
 
-    if (indexToDelete == -1) {
+    if (indexToDelete == -1 && numFighters == check) {
         cout << "\nБоец не найден." << endl;
         return;
     }
-  
-    // Сдвиг всех элементов после удаленного на одну позицию назад
-    for (int i = indexToDelete; i < numFighters - 1; ++i) {
-        fighters[i] = fighters[i + 1];
-    }
-    numFighters--;
 
     if (numFighters == 0) {
         cout << "\nМассив остался пустым" << endl;
         return;
     }
-
-    // Обновление индексов
-    createLastNameIndex(fighters, numFighters, lastNameIndex);
-    createWinsIndex(fighters, numFighters, winsIndex);
 
     cout << "\nСписок бойцов после удаления:" << endl;
     printInfoAboutFighters(fighters, numFighters);
@@ -416,6 +435,7 @@ void deleteFighterByLastNameOrByWins(BestMMAFighters fighters[], IndexEntry last
 //------------------------------------
 // Задание 2
 //------------------------------------
+
 
 
 /// <summary>
@@ -618,56 +638,97 @@ BinaryTree* deleteNodeByWins(BinaryTree* rootWins, BinaryTree*& rootLastName, in
 /// <param name="lastName"></param>
 /// <param name="fighters"></param>
 /// <param name="numFighters"></param>
-/// <param name="choice - Для правильного порядка удаления"></param>
+/// <param name="choice"></param>
 /// <returns></returns>
 BinaryTree* deleteNodeByLastName(BinaryTree* rootLastName, BinaryTree*& rootWins, string lastName, BestMMAFighters fighters[], int& numFighters, int choice) {
-    // Узел не найден
-    if (rootLastName == nullptr) {
-        return rootLastName; 
-    }
-    if (lastName < rootLastName->keyLastName) {
-        rootLastName->left = deleteNodeByLastName(rootLastName->left, rootWins, lastName, fighters, numFighters, choice);
-    }
-    else if (lastName > rootLastName->keyLastName) {
-        rootLastName->right = deleteNodeByLastName(rootLastName->right, rootWins, lastName, fighters, numFighters, choice);
-    }
-    else {
-        // Выполняется, если удаление началось именно с фамилии
-        if (choice == 1) {
-            // Количество побед для удаления
-            int wins = rootLastName->keyWins;
+    bool deleted;
+    do {
+        deleted = false;
+        BinaryTree* current = rootLastName;
+        BinaryTree* parent = nullptr;
 
-            // Удаляем соответствующий узел из дерева по количеству побед
-            rootWins = deleteNodeByWins(rootWins, rootLastName, wins, fighters, numFighters, 0);
-            // Прибавляем обратно количество бойцов
-            numFighters++;
+        // Поиск узла для удаления
+        while (current != nullptr && current->keyLastName != lastName) {
+            parent = current;
+            if (lastName < current->keyLastName) {
+                current = current->left;
+            }
+            else {
+                current = current->right;
+            }
         }
 
-        // Убавляем количество бойцов
-        numFighters--;
+        // Если узел найден, удаляем его
+        if (current != nullptr) {
+            deleted = true;
 
-        // Теперь удаляем узел из дерева по фамилии
-        if (rootLastName->left == nullptr) {
-            BinaryTree* temp = rootLastName->right;
-            delete rootLastName;
-            return temp;
-        }
-        else if (rootLastName->right == nullptr) {
-            BinaryTree* temp = rootLastName->left;
-            delete rootLastName;
-            return temp;
-        }
-        else {
-            // Находим минимальный узел в дереве
-            BinaryTree* temp = findMinNode(rootLastName->right);
+            // Выполняется, если удаление началось именно с фамилии
+            if (choice == 1) {
+                // Количество побед для удаления
+                int wins = current->keyWins;
 
-            // Копируем данные минимального узла и удаляем узел
-            rootLastName->keyLastName = temp->keyLastName;
-            rootLastName->keyWins = temp->keyWins;
-            rootLastName->dataIndex = temp->dataIndex;
-            rootLastName->right = deleteNodeByLastName(rootLastName->right, rootWins, temp->keyLastName, fighters, numFighters, choice);
+                // Удаляем соответствующий узел из дерева по количеству побед
+                rootWins = deleteNodeByWins(rootWins, rootLastName, wins, fighters, numFighters, 0);
+                // Прибавляем обратно количество бойцов
+                numFighters++;
+            }
+
+            // Убавляем количество бойцов
+            numFighters--;
+
+            // Удаление узла
+            if (current->left == nullptr) {
+                BinaryTree* temp = current->right;
+                if (parent == nullptr) {
+                    rootLastName = temp;
+                }
+                else if (parent->left == current) {
+                    parent->left = temp;
+                }
+                else {
+                    parent->right = temp;
+                }
+                delete current;
+            }
+            else if (current->right == nullptr) {
+                BinaryTree* temp = current->left;
+                if (parent == nullptr) {
+                    rootLastName = temp;
+                }
+                else if (parent->left == current) {
+                    parent->left = temp;
+                }
+                else {
+                    parent->right = temp;
+                }
+                delete current;
+            }
+            else {
+                // Находим минимальный узел в правом поддереве
+                BinaryTree* minParent = current;
+                BinaryTree * minNode = findMinNode(current->right);;
+                while (minNode->left != nullptr) {
+                    minParent = minNode;
+                    minNode = minNode->left;
+                }
+
+                // Копируем данные минимального узла
+                current->keyLastName = minNode->keyLastName;
+                current->keyWins = minNode->keyWins;
+                current->dataIndex = minNode->dataIndex;
+
+                // Удаляем минимальный узел
+                if (minParent->left == minNode) {
+                    minParent->left = minNode->right;
+                }
+                else {
+                    minParent->right = minNode->right;
+                }
+                delete minNode;
+            }
         }
-    }
+    } while (deleted); // Повторяем, пока есть узлы для удаления
+
     return rootLastName;
 }
 
@@ -680,55 +741,95 @@ BinaryTree* deleteNodeByLastName(BinaryTree* rootLastName, BinaryTree*& rootWins
 /// <param name="wins"></param>
 /// <param name="fighters"></param>
 /// <param name="numFighters"></param>
-/// <param name="choice - Для правильного порядка удаления"></param>
+/// <param name="choice"></param>
 /// <returns></returns>
 BinaryTree* deleteNodeByWins(BinaryTree* rootWins, BinaryTree*& rootLastName, int wins, BestMMAFighters fighters[], int& numFighters, int choice) {
-    // Узел не найден
-    if (rootWins == nullptr) {
-        return rootWins;
-    }
-    if (wins > rootWins->keyWins) {
-        rootWins->left = deleteNodeByWins(rootWins->left, rootLastName, wins, fighters, numFighters, choice);
-    }
-    else if (wins < rootWins->keyWins) {
-        rootWins->right = deleteNodeByWins(rootWins->right, rootLastName, wins, fighters, numFighters, choice);
-    }
-    else {      
-        // Выполняется, если удаление началось именно с количества побед
-        if (choice == 1) {
-            // Фамилия для удаления
-            string lastName = fighters[rootWins->dataIndex].lastName;
-            // Удаляем соответствующий узел из дерева по фамилии
-            rootLastName = deleteNodeByLastName(rootLastName, rootWins, lastName, fighters, numFighters, 0);
-            // Прибавляем обратно количество бойцов
-            numFighters++;
+    bool deleted;
+    do {
+        deleted = false;
+        BinaryTree* current = rootWins;
+        BinaryTree* parent = nullptr;
+
+        // Поиск узла для удаления
+        while (current != nullptr && current->keyWins != wins) {
+            parent = current;
+            if (wins > current->keyWins) {
+                current = current->left;
+            }
+            else {
+                current = current->right;
+            }
         }
 
-        // Убавляем количество бойцов
-        numFighters--;
+        // Если узел найден, удаляем его
+        if (current != nullptr) {
+            deleted = true;
 
-        // Теперь удаляем узел из дерева по количеству побед
-        if (rootWins->left == nullptr) {
-            BinaryTree* temp = rootWins->right;
-            delete rootWins;
-            return temp;
-        }
-        else if (rootWins->right == nullptr) {
-            BinaryTree* temp = rootWins->left;
-            delete rootWins;
-            return temp;
-        }
-        else {
-            // Находим минимальный узел в дереве
-            BinaryTree* temp = findMinNode(rootWins->right);
+            // Выполняется, если удаление началось именно с количества побед
+            if (choice == 1) {
+                // Удаляем соответствующий узел из дерева по фамилии
+                string lastName = fighters[current->dataIndex].lastName;
+                rootLastName = deleteNodeByLastName(rootLastName, current, lastName, fighters, numFighters, 0);
+                // Прибавляем обратно количество бойцов
+                numFighters++;
+            }
 
-            // Копируем данные минимального узла и удаляем узел
-            rootWins->keyLastName = temp->keyLastName;
-            rootWins->keyWins = temp->keyWins;
-            rootWins->dataIndex = temp->dataIndex;
-            rootWins->right = deleteNodeByWins(rootWins->right, rootLastName, temp->keyWins, fighters, numFighters, choice);
+            // Убавляем количество бойцов
+            numFighters--;
+
+            // Удаление узла
+            if (current->left == nullptr) {
+                BinaryTree* temp = current->right;
+                if (parent == nullptr) {
+                    rootWins = temp;
+                }
+                else if (parent->left == current) {
+                    parent->left = temp;
+                }
+                else {
+                    parent->right = temp;
+                }
+                delete current;
+            }
+            else if (current->right == nullptr) {
+                BinaryTree* temp = current->left;
+                if (parent == nullptr) {
+                    rootWins = temp;
+                }
+                else if (parent->left == current) {
+                    parent->left = temp;
+                }
+                else {
+                    parent->right = temp;
+                }
+                delete current;
+            }
+            else {
+                // Находим минимальный узел в правом поддереве
+                BinaryTree* minParent = current;
+                BinaryTree* minNode = findMinNode(current->right);;
+                while (minNode->left != nullptr) {
+                    minParent = minNode;
+                    minNode = minNode->left;
+                }
+
+                // Копируем данные минимального узла
+                current->keyLastName = minNode->keyLastName;
+                current->keyWins = minNode->keyWins;
+                current->dataIndex = minNode->dataIndex;
+
+                // Удаляем минимальный узел
+                if (minParent->left == minNode) {
+                    minParent->left = minNode->right;
+                }
+                else {
+                    minParent->right = minNode->right;
+                }
+                delete minNode;
+            }
         }
-    }
+    } while (deleted); // Повторяем, пока есть узлы для удаления
+
     return rootWins;
 }
 
@@ -899,6 +1000,7 @@ void searchAndPrintItemByLastNameIter(FighterList* head, const string& lastName)
     }
 }
 
+
 /// <summary>
 /// Рекурсивная функция поиска бойца по количеству побед и вывода информации о нем
 /// </summary>
@@ -924,6 +1026,7 @@ void searchAndPrintItemByWinsRecur(FighterList* current, int wins, bool& found, 
     }
     searchAndPrintItemByWinsRecur(current->next, wins, found, counter);
 }
+
 
 /// <summary>
 /// Вспомогательная функция для вызова рекурсивной функции поиска и вывода и рассмотрения ошибки
@@ -953,27 +1056,31 @@ void searchAndPrintItemByWins(FighterList* head, int wins) {
 FighterList* deleteFromListByLastName(FighterList* head, const string& lastName, BestMMAFighters fighters[], int& numFighters) {
     FighterList* current = head;
     FighterList* prev = nullptr;
-    // Если удаляемый элемент первый в списке
-    if (current != nullptr && current->fighter.lastName == lastName) {
-        head = current->next;
-        delete current;
-        numFighters--;
-        return head;
+
+    while (current != nullptr) {
+        if (current->fighter.lastName == lastName) {
+            // Удаляем элемент
+            if (prev == nullptr) {
+                // Удаляем первый элемент
+                head = current->next;
+                delete current;
+                current = head; // Перемещаем current на новый head
+            }
+            else {
+                // Удаляем элемент из середины или конца
+                prev->next = current->next;
+                delete current;
+                current = prev->next; // Перемещаем current на следующий элемент
+            }
+            numFighters--; // Уменьшаем счетчик бойцов
+        }
+        else {
+            // Переходим к следующему элементу
+            prev = current;
+            current = current->next;
+        }
     }
-    // Поиск элемента для удаления
-    while (current != nullptr && current->fighter.lastName != lastName) {
-        prev = current;
-        current = current->next;
-    }
-    // Если элемент не найден
-    if (current == nullptr) {
-        cout << "\nБоец с фамилией " << lastName << " не найден." << endl;
-        return head;
-    }
-    // Удаление элемента из списка
-    prev->next = current->next;
-    delete current;
-    numFighters--;
+
     return head;
 }
 
@@ -989,42 +1096,33 @@ FighterList* deleteFromListByLastName(FighterList* head, const string& lastName,
 FighterList* deleteFromListByWins(FighterList* head, int wins, BestMMAFighters fighters[], int& numFighters) {
     FighterList* current = head;
     FighterList* prev = nullptr;
-    // Если удаляемый элемент первый в списке
-    if (current != nullptr && current->fighter.wins == wins) {
-        head = current->next;
-        delete current;
-        numFighters--;
-        return head;
+
+    while (current != nullptr) {
+        if (current->fighter.wins == wins) {
+            // Удаляем элемент
+            if (prev == nullptr) {
+                // Удаляем первый элемент
+                head = current->next;
+                delete current;
+                current = head; // Перемещаем current на новый head
+            }
+            else {
+                // Удаляем элемент из середины или конца
+                prev->next = current->next;
+                delete current;
+                current = prev->next; // Перемещаем current на следующий элемент
+            }
+            numFighters--; // Уменьшаем счетчик бойцов
+        }
+        else {
+            // Переходим к следующему элементу
+            prev = current;
+            current = current->next;
+        }
     }
-    // Поиск элемента для удаления
-    while (current != nullptr && current->fighter.wins != wins) {
-        prev = current;
-        current = current->next;
-    }
-    // Если элемент не найден
-    if (current == nullptr) {
-        cout << "\nБоец с количеством побед " << wins << " не найден." << endl;
-        return head;
-    }
-    // Удаление элемента из списка
-    prev->next = current->next;
-    delete current;
-    numFighters--;
+
     return head;
 }
-
-///// <summary>
-///// Функция освобождения памяти, занятой списком бойцов
-///// </summary>
-///// <param name="head"></param>
-//void deleteList(FighterNode* head) {
-//    FighterNode* current = head;
-//    while (current != nullptr) {
-//        FighterNode* next = current->next;
-//        delete current;
-//        current = next;
-//    }
-//}
 
 
 int main()
@@ -1038,6 +1136,7 @@ int main()
         cout << "1. Первая часть программы\n2. Вторая часть программы"
             << "\n3. Третья часть программы\n4. Завершить работу программы" << endl;
         inputNumToFirstMenu = getIntNumber(1, 4);
+        system("cls");
 
         IndexEntry lastNameIndex[30];
         IndexEntry winsIndex[30];
@@ -1049,17 +1148,19 @@ int main()
             // Задание 1
             //------------------------------------
             do {
-                cout << "\n1. Получить информацию о бойцах из текстового файла\n2. Ввести бойцов вручную" << endl;
+                cout << "1. Получить информацию о бойцах из текстового файла\n2. Ввести бойцов вручную" << endl;
                 inputNumToSecondMenu = getIntNumber(1, 2);
                 switch (inputNumToSecondMenu) {
                 case 1: {
-                    numFighters = 4;
+                    numFighters = 10;
                     readFightersFromFile("fightersInfo.txt", fighters, numFighters);
                     break;
                 }
                 case 2: {
-                    cout << "\nВвод количества бойцов : ";
+                    system("cls");
+                    cout << "Ввод количества бойцов : ";
                     numFighters = getIntNumber(1, 30);
+                    system("cls");
 
                     // Ввод данных о бойцах
                     inputFighters(fighters, numFighters);
@@ -1072,17 +1173,22 @@ int main()
             createLastNameIndex(fighters, numFighters, lastNameIndex);
             createWinsIndex(fighters, numFighters, winsIndex);
 
+            system("cls");
+            cout << "Список бойцов:" << endl;
+            printInfoAboutFighters(fighters, numFighters);
+
             do {
                 cout << "\n1. Вывести информацию о бойцах в порядке ввода\n2. Вывести отсортированную информацию по фамилии"
                     << "\n3. Вывести отсортированную информацию по количеству побед"<< "\n4. Поиск бойца по фамилии"
                     << "\n5. Поиск бойца по количеству побед\n6. Изменение информации о бойце\n7. Удаление информации о бойце по фамилии"
                     << "\n8. Удаление информации о бойце по количеству побед\n9. Выход в главное меню" << endl;
                 inputNumToThirdMenu = getIntNumber(1, 9);
+                system("cls");
 
                 switch (inputNumToThirdMenu) {
                 case 1: {
                     // Вывод бойцов в порядке ввода
-                    cout << "\nВывод списка в порядке ввода:" << endl;
+                    cout << "Вывод списка в порядке ввода:" << endl;
                     printInfoAboutFighters(fighters, numFighters);
                     break;
                 }
@@ -1098,7 +1204,7 @@ int main()
                 }
                 case 4: {
                     // Поиск по фамилии
-                    string searchLastName = getStringInput("\nВведите фамилию бойца для поиска: ");
+                    string searchLastName = getStringInput("Введите фамилию бойца для поиска: ");
                     int foundLastNameIndex = binarySearchLastNameRecur(lastNameIndex, 0, numFighters - 1, searchLastName);
                     cout << "\nРезультаты поиска:" << endl;
                     printFighterInfo(fighters, foundLastNameIndex);
@@ -1106,9 +1212,11 @@ int main()
                 }
                 case 5: {
                     // Поиск по количеству побед
-                    cout << "\nВвод количества побед бойца для поиска: ";
+                    cout << "Ввод количества побед бойца для поиска: ";
                     int searchWins = getIntNumber(0, 100);
-                    int foundWinsIndex = binarySearchWinsIter(winsIndex, numFighters, searchWins);
+                    int foundWinsIndex = 0;
+
+                    foundWinsIndex = binarySearchWinsIter(winsIndex, numFighters, searchWins);
                     cout << "\nРезультаты поиска:" << endl;
                     printFighterInfo(fighters, foundWinsIndex);
                     break;
@@ -1128,8 +1236,6 @@ int main()
                     deleteFighterByLastNameOrByWins(fighters, lastNameIndex, winsIndex, numFighters, 0);
                     break;
                 }
-                case 9:
-                    cout << endl;
                 }
             } while (inputNumToThirdMenu != 9);
             break;
@@ -1140,17 +1246,19 @@ int main()
             //------------------------------------
 
             do {
-                cout << "\n1. Получить информацию о бойцах из текстового файла\n2. Ввести бойцов вручную" << endl;
+                cout << "1. Получить информацию о бойцах из текстового файла\n2. Ввести бойцов вручную" << endl;
                 inputNumToSecondMenu = getIntNumber(1, 2);
                 switch (inputNumToSecondMenu) {
                 case 1: {
-                    numFighters = 4;
+                    numFighters = 10;
                     readFightersFromFile("fightersInfo.txt", fighters, numFighters);
                     break;
                 }
                 case 2: {
-                    cout << "\nВвод количества бойцов : ";
+                    system("cls");
+                    cout << "Ввод количества бойцов : ";
                     numFighters = getIntNumber(1, 30);
+                    system("cls");
 
                     // Ввод данных о бойцах
                     inputFighters(fighters, numFighters);
@@ -1173,65 +1281,62 @@ int main()
             for (int i = 0; i < numFighters; ++i) {
                 rootWins = insertNodeByWins(rootWins, fighters[i].wins, fighters[i].lastName, i);
             }
-
+            system("cls");
+            cout << "Список бойцов:" << endl;
+            printInfoAboutFighters(fighters, numFighters);
 
             do {
-                cout << "\n1. Вывод данных в порядке ввода\n2. Вывод данных по возрастанию фамилии\n3. Вывод данных по убыванию фамилии"
-                    << "\n4. Вывод данных по возрастанию количества побед\n5. Вывод данных по убыванию количества побед"
-                    << "\n6. Поиск бойца по фамилии\n7. Поиск бойца по количеству побед\n8. Удаление информации о бойце по фамилии"
-                    << "\n9. Удаление информации о бойце по количеству побед\n10. Выход в главное меню" << endl;
-                inputNumToThirdMenu = getIntNumber(1, 10);
+                cout << "\n1. Вывод данных по возрастанию фамилии\n2. Вывод данных по убыванию фамилии"
+                    << "\n3. Вывод данных по возрастанию количества побед\n4. Вывод данных по убыванию количества побед"
+                    << "\n5. Поиск бойца по фамилии\n6. Поиск бойца по количеству побед\n7. Удаление информации о бойце (бойцах) по фамилии"
+                    << "\n8. Удаление информации о бойце (бойцах) по количеству побед\n9. Выход в главное меню" << endl;
+                inputNumToThirdMenu = getIntNumber(1, 9);
+                system("cls");
 
-                int counter1 = 0, counter2 = 0;
+                int counter1 = 0, counter2 = 0; // Для правильного порядка удаления
 
                 switch (inputNumToThirdMenu) {
-                case 1: {
-                    // Вывод бойцов в порядке ввода
-                    cout << "\nВывод списка в порядке ввода:" << endl;
-                    printInfoAboutFighters(fighters, numFighters);
-                    break;
-                }
-                case 2: {                                        
+                case 1: {                                        
                     // Вывод данных по возрастанию фамилии
-                    cout << "\nВывод данных по возрастанию фамилии:" << endl;
+                    cout << "Вывод данных по возрастанию фамилии:" << endl;
                     printAscendingByLastName(rootLastName, fighters);
                     break;
                 }
-                case 3: {
+                case 2: {
                     // Вывод данных по убыванию фамилии
-                    cout << "\nВывод данных по убыванию фамилии:" << endl;
+                    cout << "Вывод данных по убыванию фамилии:" << endl;
                     printDescendingByLastName(rootLastName, fighters);
                     break;
                 }
-                case 4: {
+                case 3: {
                     // Вывод данных по возрастанию количества побед
-                    cout << "\nВывод данных по возрастанию количества побед:" << endl;
+                    cout << "Вывод данных по возрастанию количества побед:" << endl;
                     printAscendingByWins(rootWins, fighters);
                     break;
                 }
-                case 5: {
+                case 4: {
                     // Вывод данных по убыванию количества побед
-                    cout << "\nВывод данных по убыванию количества побед:" << endl;
+                    cout << "Вывод данных по убыванию количества побед:" << endl;
                     printDescendingByWins(rootWins, fighters);
                     break;
                 }
-                case 6: {
+                case 5: {
                     // Поиск по фамилии
-                    string searchLastName = getStringInput ("\nВведите фамилию для поиска: ");
+                    string searchLastName = getStringInput ("Введите фамилию для поиска: ");
                     BinaryTree* foundNode = binarySearchTreeNodeByLastNameRecur(rootLastName, searchLastName);
                     if (foundNode != nullptr) {
                         cout << "\nНайден боец:" << endl;
                         printFighterInfo(fighters, foundNode->dataIndex);
                     }
                     else {
-                        cout << "Боец с фамилией " << searchLastName << " не найден." << endl;
+                        cout << "\nБоец с фамилией " << searchLastName << " не найден." << endl;
                     }
                     break;
                 }
-                case 7: {
+                case 6: {
                     // Поиск по количеству побед
                     int searchWins;
-                    cout << "\nВведите количество побед для поиска: ";
+                    cout << "Введите количество побед для поиска: ";
                     searchWins = getIntNumber(0, 100);
                     BinaryTree* foundNodeByWins = binarySearchTreeNodeByWinsIter(rootWins, searchWins);
                     if (foundNodeByWins != nullptr) {
@@ -1239,16 +1344,16 @@ int main()
                         printFighterInfo(fighters, foundNodeByWins->dataIndex);
                     }
                     else {
-                        cout << "Боец с количеством побед " << searchWins << " не найден." << endl;
+                        cout << "\nБоец с количеством побед " << searchWins << " не найден." << endl;
                     }
                     break;
                 }
-                case 8: {
+                case 7: {
                     // Счетчик для правильного порядка удаления
                     counter1++;
 
                     // Удаление узла по фамилии
-                    string lastNameToDelete = getStringInput ("\nВведите фамилию для удаления: ");
+                    string lastNameToDelete = getStringInput ("Введите фамилию для удаления: ");
                     if (counter1 > counter2) {
                         rootLastName = deleteNodeByLastName(rootLastName, rootWins, lastNameToDelete, fighters, numFighters, 1);
                     }
@@ -1257,7 +1362,8 @@ int main()
                     }
                     if (numFighters != 0) {
                         // Вывод дерева после удаления
-                        cout << "\nДерево по фамилиям после удаления:" << endl;
+                        system("cls");
+                        cout << "Дерево по фамилиям после удаления:" << endl;
                         printAscendingByLastName(rootLastName, fighters);
                         cout << "\nДерево по количеству побед после удаления:" << endl;
                         printDescendingByWins(rootWins, fighters);
@@ -1268,13 +1374,13 @@ int main()
                     counter1 = 0;
                     break;
                 }
-                case 9: {
+                case 8: {
                     // Счетчик для правильного порядка удаления
                     counter2++;
 
                     // Удаление узла по количеству побед
                     int winsToDelete;
-                    cout << "\nВведите количество побед для удаления: ";
+                    cout << "Введите количество побед для удаления: ";
                     winsToDelete = getIntNumber(0, 100);
                     if (counter2 > counter1) {
                         rootWins = deleteNodeByWins(rootWins, rootLastName, winsToDelete, fighters, numFighters, 1);
@@ -1284,7 +1390,8 @@ int main()
                     }
                     if (numFighters != 0) {
                         // Вывод дерева после удаления
-                        cout << "\nДерево по количеству побед после удаления:" << endl;
+                        system("cls");
+                        cout << "Дерево по количеству побед после удаления:" << endl;
                         printDescendingByWins(rootWins, fighters);
                         cout << "\nДерево по фамилиям после удаления:" << endl;
                         printAscendingByLastName(rootLastName, fighters);
@@ -1295,10 +1402,8 @@ int main()
                     counter2 = 0;
                     break;
                 }
-                case 10:
-                    cout << endl;
                 }
-            } while (inputNumToThirdMenu != 9);
+            } while (inputNumToThirdMenu != 9 && rootWins != nullptr);
             break;
         }
         case 3: {
@@ -1307,17 +1412,19 @@ int main()
             //------------------------------------
 
             do {
-                cout << "\n1. Получить информацию о бойцах из текстового файла\n2. Ввести бойцов вручную" << endl;
+                cout << "1. Получить информацию о бойцах из текстового файла\n2. Ввести бойцов вручную" << endl;
                 inputNumToSecondMenu = getIntNumber(1, 2);
                 switch (inputNumToSecondMenu) {
                 case 1: {
-                    numFighters = 4;
+                    numFighters = 10;
                     readFightersFromFile("fightersInfo.txt", fighters, numFighters);
                     break;
                 }
                 case 2: {
-                    cout << "\nВвод количества бойцов : ";
+                    system("cls");
+                    cout << "Ввод количества бойцов : ";
                     numFighters = getIntNumber(1, 30);
+                    system("cls");
 
                     // Ввод данных о бойцах
                     inputFighters(fighters, numFighters);
@@ -1334,60 +1441,69 @@ int main()
             for (int i = 0; i < numFighters; ++i) {
                 insertUnsorted(&head, fighters[i]);
             }
+
+            system("cls");
+            cout << "Список бойцов:" << endl;
+            printListInOrder(head);
+
             do {
                 cout << "\n1. Вывод списка в порядке ввода\n2. Вывод списка в порядке возрастания фамилии"
                     << "\n3. Вывод списка в порядке убывания количества побед\n4. Поиск бойца по фамилии"
-                    << "\n5. Поиск бойца по количеству побед\n6. Добавление нового бойца в список"
-                    << "\n7. Удаление информации о бойце по фамилии\n8. Удаление информации о бойце по количеству побед"
+                    << "\n5. Поиск бойца (бойцов) по количеству побед\n6. Добавление нового бойца (бойцов) в список"
+                    << "\n7. Удаление информации о бойце (бойцах) по фамилии\n8. Удаление информации о бойце (бойцах) по количеству побед"
                     << "\n9. Выход в главное меню" << endl;
                 inputNumToThirdMenu = getIntNumber(1, 9);
+                system("cls");
+
                 switch (inputNumToThirdMenu) {
                 case 1: {
                     // Вывод списка в порядке ввода
-                    cout << "\nВывод списка в порядке ввода:" << endl;
+                    cout << "Вывод списка в порядке ввода:" << endl;
                     printListInOrder(head);
                     break;
                 }
                 case 2: {
                     // Вывод списка в порядке возрастания фамилии
-                    cout << "\nВывод списка в порядке возрастания фамилии:" << endl;
+                    cout << "Вывод списка в порядке возрастания фамилии:" << endl;
                     printListSortedByLastName(head);
                     break;
                 }
                 case 3: {
                     // Вывод списка в порядке убывания количества побед
-                    cout << "\nВывод списка в порядке убывания количества побед:" << endl;
+                    cout << "Вывод списка в порядке убывания количества побед:" << endl;
                     printListSortedByWins(head);
                     break;
                 }
                 case 4: {
                     // Поиск и вывод по фамилии в списке
-                    string searchLastNameList = getStringInput ("\nВведите фамилию для поиска в списке: ");
+                    string searchLastNameList = getStringInput ("Введите фамилию для поиска в списке: ");
                     searchAndPrintItemByLastNameIter(head, searchLastNameList);
                     break;
                 }
                 case 5: {
                     // Поиск и вывод по количеству побед в списке 
-                    cout << "\nВведите количество побед для поиска в списке: ";
+                    cout << "Введите количество побед для поиска в списке: ";
                     int searchWinsList = getIntNumber(0, 100);
                     searchAndPrintItemByWins(head, searchWinsList);
                     break;
                 }
                 case 6: {
                     // Добавление новых(ого) бойцов(а) в список и вывод нового списка
-                    cout << "\nВведите количество бойцов для добавления в список:" << endl;
+                    cout << "Введите количество бойцов для добавления в список:" << endl;
                     int numOfNewFighters = getIntNumber(1, 10);
                     BestMMAFighters newFighters[10];
                     inputFighters(newFighters, numOfNewFighters);
                     createLastNameIndex(fighters, numFighters, lastNameIndex);
                     createWinsIndex(fighters, numFighters, winsIndex);
-                    cout << "\nНовые бойцы для добавления в список:" << endl;
+                    system("cls");
+                    cout << "Новые бойцы для добавления в список:" << endl;
                     printInfoAboutFighters(newFighters, numOfNewFighters);
                     int count = 0;
                     do {
                         cout << "\n1. Вывести новый список с помощью сортировки по фамилии"
                             << "\n2. Вывести новый список с помощью сортировки по количеству побед" << endl;
                         inputNumToFourthMenu = getIntNumber(1, 2);
+                        system("cls");
 
                         switch (inputNumToFourthMenu) {
                         case 1: {
@@ -1396,7 +1512,7 @@ int main()
                                 insertSortedByLastName(&head, newFighters[i]);
                                 numFighters++;
                             }
-                            cout << "\nНовый список после добавления бойцов и сортировки по фамилии:" << endl;
+                            cout << "Новый список после добавления бойцов и сортировки по фамилии:" << endl;
                             printListSortedByLastName(head);
                             count++;
                             break;
@@ -1407,7 +1523,7 @@ int main()
                                 insertSortedByWins(&head, newFighters[i]);
                                 numFighters++;
                             }
-                            cout << "\nНовый список после добавления бойцов и сортировки по количеству побед:" << endl;
+                            cout << "Новый список после добавления бойцов и сортировки по количеству побед:" << endl;
                             printListSortedByWins(head);
                             count++;
                             break;
@@ -1418,40 +1534,40 @@ int main()
                 }
                 case 7: {
                     // Удаление записи из списка по фамилии
-                    string lastNameToDeleteList = getStringInput ("\nВведите фамилию для удаления из списка: ");
+                    string lastNameToDeleteList = getStringInput ("Введите фамилию для удаления из списка: ");
                     int check = numFighters;
                     head = deleteFromListByLastName(head, lastNameToDeleteList, fighters, numFighters);
+                    system("cls");
                     if (check == numFighters) {
                     }
                     else if (numFighters != 0) {
-                        cout << "\nСписок после удаления:" << endl;
+                        cout << "Список после удаления:" << endl;
                         printListInOrder(head);
                     }
                     else {
-                        cout << "\nСписок остался пустым" << endl;
+                        cout << "Список остался пустым" << endl;
                     }
                     break;
                 }
                 case 8: {
                     // Удаление записи из списка по количеству побед
                     int winsToDeleteList;
-                    cout << "\nВведите количество побед для удаления из списка: ";
+                    cout << "Введите количество побед для удаления из списка: ";
                     winsToDeleteList = getIntNumber(0, 100);
                     int check = numFighters;
                     head = deleteFromListByWins(head, winsToDeleteList, fighters, numFighters);
+                    system("cls");
                     if (check == numFighters) {
                     }
                     else if (numFighters != 0) {
-                        cout << "\nСписок после удаления:" << endl;
+                        cout << "Список после удаления:" << endl;
                         printListInOrder(head);
                     }
                     else {
-                        cout << "\nСписок остался пустым" << endl;
+                        cout << "Список остался пустым" << endl;
                     }
                     break;
                 }
-                case 9:
-                    cout << endl;
                 }
             } while (inputNumToThirdMenu != 9);
             break;
