@@ -12,9 +12,8 @@ struct BinaryTree {
     int dataIndex;      // »ндекс элемента в массиве
     BinaryTree* left;
     BinaryTree* right;
-    BinaryTree* counterpart; // ”казатель на соответствующий узел в другом дереве
 
-    BinaryTree() : keyLastName(""), keyWins(-1), dataIndex(-1), left(nullptr), right(nullptr), counterpart(nullptr) {}
+    BinaryTree() : keyLastName(""), keyWins(-1), dataIndex(-1), left(nullptr), right(nullptr) {}
 };
 
 #endif
