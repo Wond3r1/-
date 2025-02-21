@@ -19,7 +19,7 @@ bool isValidChar(char c) {
     // Проверяем, является ли символ буквой русского или английского алфавита или пробелом
     return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
         (c >= 'А' && c <= 'Я') || (c >= 'а' && c <= 'я') ||
-        (c == ' '));
+        (c == 'ё') || (c == 'Ё') || (c == ' '));
 }
 
 
@@ -30,13 +30,14 @@ bool isValidChar(char c) {
 /// <returns></returns>
 string getStringInput(const string& prompt) {
     string input;
-    while (true) {
+    bool isValid;
+    do {
         cout << prompt;
 
         getline(cin, input);
 
-        // Проверяем каждый символ в строке
-        bool isValid = true;
+        // Проверяем символы в строке
+        isValid = true;
         for (char c : input) {
             if (!isValidChar(c)) {
                 isValid = false;
@@ -44,13 +45,12 @@ string getStringInput(const string& prompt) {
             }
         }
 
-        if (isValid) {
-            return input;
-        }
-        else {
+        if (!isValid) 
             cout << "\nОшибка: строка должна содержать только буквы русского и английского алфавита и пробелы.\n";
-        }
-    }
+
+    } while (!isValid);
+
+    return input;
 }
 
 
@@ -92,7 +92,7 @@ int getIntNumber(int lowerbound, int upperbound) {
 
 
 /// <summary>
-/// Функция для считывания информации о бойцах с файла
+/// Функция для считывания информации о бойцах из файла
 /// </summary>
 /// <param name="filename"></param>
 /// <param name="fighters"></param>
@@ -104,25 +104,21 @@ void readFightersFromFile(const string& filename, BestMMAFighters fighters[], in
         return;
     }
 
-    numFighters = 0; // Счетчик бойцов
-    string line; // Переменная для хранения строки из файла
+    numFighters = 0;
+    string line;
+
+    // Читаем файл построчно
+    while (getline(file, line)) { 
 
 
-    while (getline(file, line)) { // Читаем файл построчно
-        if (line.empty()) {
-            continue; // Пропускаем пустые строки
-        }
-
-        istringstream iss(line); // Создаем поток для разбора строки
+        istringstream iss(line); // Поток для разбора строки
         BestMMAFighters fighter;
 
-        // Разбираем строку на отдельные данные
-        if (iss >> fighter.firstName >> fighter.lastName >> fighter.birthYear >> fighter.wins >> fighter.losses >> fighter.weightClass) {
+        // Разбираем строку на отдельные данные о бойце
+        if (iss >> fighter.firstName >> fighter.lastName >> fighter.birthYear 
+            >> fighter.wins >> fighter.losses >> fighter.weightClass) {
             fighters[numFighters] = fighter;
             numFighters++;
-        }
-        else {
-            cerr << "\nОшибка: некорректный формат строки в файле: " << line << endl;
         }
     }
 
@@ -1469,8 +1465,6 @@ int main()
                         system("cls");
                         cout << "Дерево по фамилиям после удаления:" << endl;
                         printAscendingByLastName(rootLastName, fighters);
-                        cout << "\nДерево по количеству побед после удаления:" << endl;
-                        printDescendingByWins(rootWins, fighters);
                     }
                     else {
                         cout << "\nДерево осталось пустым" << endl;
@@ -1497,8 +1491,6 @@ int main()
                         system("cls");
                         cout << "Дерево по количеству побед после удаления:" << endl;
                         printDescendingByWins(rootWins, fighters);
-                        cout << "\nДерево по фамилиям после удаления:" << endl;
-                        printAscendingByLastName(rootLastName, fighters);
                     }
                     else {
                         cout << "\nДерево осталось пустым" << endl;
